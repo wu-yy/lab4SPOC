@@ -356,6 +356,21 @@ bad_fork_cleanup_proc:
 int
 do_exit(int error_code) {
     panic("process exit!!.\n");
+    cprintf(" do_exit: proc pid %d will exit\n", current->pid);
+	cprintf(" do_exit: proc  parent %x\n", current->parent);
+    current->state = PROC_ZOMBIE;
+    bool intr_flag;
+    struct proc_struct *proc;
+    local_intr_save(intr_flag);
+    {
+        proc = current->parent;
+        if (proc->wait_state == WT_CHILD) {
+            wakeup_proc(proc);
+        }
+	}
+    local_intr_restore(intr_flag);
+     schedule();
+    cprintf("do_exit will not return!! %d.\n", current->pid);
 }
 
 // init_main - the second kernel thread used to create user_main kernel threads
